@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, thread, time::Duration};
 
 use board::Board;
 
@@ -23,7 +23,6 @@ fn main() {
         } else {
             resulting_flag = 2;
         }
-
         match resulting_flag {
             0 => {
                 board.play(turn, choice);

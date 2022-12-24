@@ -18,12 +18,16 @@ impl Board {
             .filter(|x| x.1 == selected_column)
             .collect::<Vec<&(u8, u8, bool)>>()
             .len() as u8;
+        if pegs_count_for_column == 8 {
+            println!("You cannot put anymore pegs in this column.");
+            return;
+        }
         self.pegs
             .insert((pegs_count_for_column, selected_column, turn));
     }
 
     pub fn print_board(&self) {
-        let mut display_board: Vec<Vec<&str>> = vec![vec!["  "; 7]; 8];
+        let mut display_board: Vec<Vec<&str>> = vec![vec!["- "; 7]; 8];
         for (i, j, player) in self.pegs.iter() {
             display_board[*i as usize][*j as usize] = if *player { "x " } else { "o " }
         }

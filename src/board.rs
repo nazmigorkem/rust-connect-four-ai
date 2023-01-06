@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+#[derive(Clone)]
 pub struct Board {
     pub pegs: HashSet<(u8, u8, bool)>,
 }
@@ -12,7 +13,7 @@ impl Board {
     }
 
     pub fn play(&mut self, turn: bool, selected_row: u8, selected_column: u8) -> (u8, String) {
-        if selected_row == 8 {
+        if selected_row == 7 {
             return (
                 3,
                 format!(
@@ -30,6 +31,18 @@ impl Board {
                 selected_column + 1
             ),
         );
+    }
+
+    pub fn generate_possible_moves(&mut self, turn: bool) -> Vec<Board> {
+        let mut outcome: Vec<Board> = Vec::new();
+        for j in 0..8 {
+            let mut board = self.clone();
+            let result = board.play(turn, self.get_peg_count_in_column(j) as u8, j);
+            if result.0 == 0 {
+                outcome.push(board);
+            }
+        }
+        outcome
     }
 
     pub fn is_game_finished(&self, i: u8, j: u8, turn: bool) -> bool {
@@ -52,13 +65,21 @@ impl Board {
         false
     }
 
+    pub fn get_peg_count_in_column(&self, choice: u8) -> usize {
+        self.pegs
+            .iter()
+            .filter(|x| x.1 == choice)
+            .collect::<Vec<&(u8, u8, bool)>>()
+            .len()
+    }
+
     pub fn print_board(&self, result: &(u8, String)) {
         let width = 20;
         println!(
             "{:=<width$}\n\x1b[2KLast move result: {}\n{:=<width$}",
             "=", result.1, "=",
         );
-        let mut display_board: Vec<Vec<&str>> = vec![vec!["- "; 7]; 8];
+        let mut display_board: Vec<Vec<&str>> = vec![vec!["- "; 8]; 7];
         for (i, j, player) in self.pegs.iter() {
             display_board[*i as usize][*j as usize] = if *player { "x " } else { "o " }
         }
@@ -69,6 +90,6 @@ impl Board {
             }
             print!("\n");
         }
-        print!("\x1b[12F");
+        print!("\x1b[11F");
     }
 }

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::enums::GameState;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Board {
     pub pegs: HashSet<(u8, u8, bool)>,
     pub last_move: Option<(u8, u8, bool)>,
@@ -61,19 +61,26 @@ impl Board {
             return false;
         }
         let (i, j, turn) = self.last_move.unwrap();
-        let directions = [(-1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)];
+        let directions = [
+            [(-1, 0), (1, 0)],
+            [(0, -1), (0, 1)],
+            [(-1, -1), (-1, 1)],
+            [(1, 1), (1, -1)],
+        ];
         for direction in directions {
-            let mut current_check = direction.clone();
             let mut count = 1;
-            while let Some(_) =
-                self.pegs
-                    .get(&(i + current_check.0 as u8, j + current_check.1 as u8, turn))
-            {
-                current_check.0 += direction.0;
-                current_check.1 += direction.1;
-                count += 1;
-                if count == 4 {
-                    return true;
+            for position in direction {
+                let mut current_check = position;
+                while let Some(_) =
+                    self.pegs
+                        .get(&(i + current_check.0 as u8, j + current_check.1 as u8, turn))
+                {
+                    current_check.0 += position.0;
+                    current_check.1 += position.1;
+                    count += 1;
+                    if count == 4 {
+                        return true;
+                    }
                 }
             }
         }

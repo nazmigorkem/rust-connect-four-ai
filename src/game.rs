@@ -13,7 +13,7 @@ impl Game {
         let mut board = Board::new();
         let mut turn = true;
         let option = Game::select_play_type();
-        let side = if option == PlayType::HumanVsAI {
+        let human_side = if option == PlayType::HumanVsAI {
             Game::select_side()
         } else {
             true
@@ -25,11 +25,14 @@ impl Game {
         board.print_board(&(GameState::NoError, String::from("Game started.")));
         loop {
             let mut resulting_flag = (GameState::NoError, String::from(""));
-            if option == PlayType::HumanVsHuman || (option == PlayType::HumanVsAI && turn == side) {
-                resulting_flag = Game::play_player(&mut board, turn);
-            } else if option == PlayType::AIVsAI || (option == PlayType::HumanVsAI && turn != side)
+            if option == PlayType::HumanVsHuman
+                || (option == PlayType::HumanVsAI && turn == human_side)
             {
-                resulting_flag = Game::play_ai(&mut board, turn);
+                resulting_flag = Game::play_player(&mut board, turn);
+            } else if option == PlayType::AIVsAI
+                || (option == PlayType::HumanVsAI && turn != human_side)
+            {
+                resulting_flag = Game::play_ai(&mut board, turn, !human_side);
             }
 
             if resulting_flag.0 == GameState::NoError {
@@ -52,6 +55,67 @@ impl Game {
                 turn = !turn;
             }
         }
+    }
+
+    pub fn play_ai(board: &mut Board, turn: bool, ai_side: bool) -> (GameState, String) {
+        let mut resulting_flag: (GameState, String);
+
+        let moves = board.generate_possible_moves(turn);
+
+        let mut current_move_board = moves[0].clone();
+
+        let mut best_move = None;
+        for move_ in moves {
+            let current_move = minimax(&move_.0, true, 6, f32::MIN, f32::MAX, ai_side);
+            println!("{current_move}");
+            if best_move.is_none() {
+                best_move = Some(current_move);
+            } else if best_move.unwrap() < current_move {
+                best_move = Some(current_move);
+                current_move_board = move_;
+            }
+        }
+        resulting_flag = board.play(turn, current_move_board.1, current_move_board.2);
+        if board.is_game_finished() {
+            resulting_flag = (GameState::Finished, String::from("Game finished."));
+        }
+        return resulting_flag;
+    }
+
+    pub fn play_player(board: &mut Board, turn: bool) -> (GameState, String) {
+        let mut buffer = String::new();
+        let mut resulting_flag: (GameState, String) = (GameState::NoError, String::new());
+        let mut choice = 0;
+        if let Ok(_) = io::stdin().read_line(&mut buffer) {
+            if let Ok(parsed) = buffer.trim().parse::<u8>() {
+                choice = parsed - 1;
+                if choice > 7 {
+                    resulting_flag = (
+                        GameState::IntegerError,
+                        String::from("Please give an integer between 1 and 8."),
+                    );
+                }
+            } else {
+                resulting_flag = (
+                    GameState::IntegerError,
+                    String::from("Please give an integer between 1 and 8."),
+                );
+            }
+            print!("\x1b[1A\x1b[0J");
+        } else {
+            resulting_flag = (
+                GameState::InputError,
+                String::from("An error occured while taking input."),
+            );
+        }
+        let i = board.get_peg_count_in_column(choice) as u8;
+        if resulting_flag.0 == GameState::NoError {
+            resulting_flag = board.play(turn, i, choice);
+        }
+        if board.is_game_finished() {
+            resulting_flag = (GameState::Finished, String::from("Game finished."));
+        }
+        return resulting_flag;
     }
 
     pub fn select_play_type() -> PlayType {
@@ -94,63 +158,5 @@ impl Game {
                 }
             }
         }
-    }
-
-    pub fn play_player(board: &mut Board, turn: bool) -> (GameState, String) {
-        let mut buffer = String::new();
-        let mut resulting_flag: (GameState, String) = (GameState::NoError, String::new());
-        let mut choice = 0;
-        if let Ok(_) = io::stdin().read_line(&mut buffer) {
-            if let Ok(parsed) = buffer.trim().parse::<u8>() {
-                choice = parsed - 1;
-                if choice > 7 {
-                    resulting_flag = (
-                        GameState::IntegerError,
-                        String::from("Please give an integer between 1 and 8."),
-                    );
-                }
-            } else {
-                resulting_flag = (
-                    GameState::IntegerError,
-                    String::from("Please give an integer between 1 and 8."),
-                );
-            }
-            print!("\x1b[1A\x1b[0J");
-        } else {
-            resulting_flag = (
-                GameState::InputError,
-                String::from("An error occured while taking input."),
-            );
-        }
-        let i = board.get_peg_count_in_column(choice) as u8;
-        if resulting_flag.0 == GameState::NoError {
-            resulting_flag = board.play(turn, i, choice);
-        }
-        if board.is_game_finished() {
-            resulting_flag = (GameState::Finished, String::from("Game finished."));
-        }
-        return resulting_flag;
-    }
-
-    pub fn play_ai(board: &mut Board, turn: bool) -> (GameState, String) {
-        let mut resulting_flag: (GameState, String);
-
-        let mut moves = board.generate_possible_moves(turn);
-
-        let mut current_move_board = moves[0].clone();
-
-        let mut best_move = minimax(&mut current_move_board.0, true, 5);
-        for move_ in moves.iter_mut().next() {
-            let current_move = minimax(&mut move_.0, true, 5);
-            if best_move < current_move {
-                best_move = current_move;
-                current_move_board = move_.clone();
-            }
-        }
-        resulting_flag = board.play(turn, current_move_board.1, current_move_board.2);
-        if board.is_game_finished() {
-            resulting_flag = (GameState::Finished, String::from("Game finished."));
-        }
-        return resulting_flag;
     }
 }

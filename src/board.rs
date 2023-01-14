@@ -3,12 +3,14 @@ use std::collections::HashSet;
 #[derive(Clone)]
 pub struct Board {
     pub pegs: HashSet<(u8, u8, bool)>,
+    pub value: i32,
 }
 
 impl Board {
     pub fn new() -> Self {
         Board {
             pegs: HashSet::new(),
+            value: 0,
         }
     }
 
@@ -33,13 +35,14 @@ impl Board {
         );
     }
 
-    pub fn generate_possible_moves(&mut self, turn: bool) -> Vec<Board> {
-        let mut outcome: Vec<Board> = Vec::new();
+    pub fn generate_possible_moves(&self, turn: bool) -> Vec<(Board, u8, u8)> {
+        let mut outcome: Vec<(Board, u8, u8)> = Vec::new();
         for j in 0..8 {
             let mut board = self.clone();
-            let result = board.play(turn, self.get_peg_count_in_column(j) as u8, j);
+            let row = self.get_peg_count_in_column(j) as u8;
+            let result = board.play(turn, row, j);
             if result.0 == 0 {
-                outcome.push(board);
+                outcome.push((board, row, j));
             }
         }
         outcome
@@ -93,3 +96,23 @@ impl Board {
         print!("\x1b[11F");
     }
 }
+
+impl Ord for Board {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.value.cmp(&other.value)
+    }
+}
+
+impl PartialOrd for Board {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(other.cmp(self))
+    }
+}
+
+impl PartialEq for Board {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
+impl Eq for Board {}

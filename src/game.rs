@@ -18,6 +18,7 @@ impl Game {
             } else {
                 resulting_flag = (1, String::from("Please give an integer between 1 and 8."));
             }
+            print!("\x1b[1A\x1b[0J");
         } else {
             resulting_flag = (2, String::from("An error occured while taking input."));
         }
@@ -29,9 +30,19 @@ impl Game {
         return (resulting_flag, (i, choice));
     }
 
-    pub fn play_ai(board: &mut Board) {
-        let res = minimax(board, true, 6, 0, 0);
-        res.print_board(&(0, String::from("_")));
-        println!("{}", res.value);
+    pub fn play_ai(board: &Board, turn: bool) -> (Board, u8, u8) {
+        let mut moves = board.generate_possible_moves(turn);
+
+        let mut current_move_board = moves[0].clone();
+
+        let mut best_move = minimax(&mut current_move_board.0, true, 5);
+        for move_ in moves.iter_mut().next() {
+            let current_move = minimax(&mut move_.0, true, 5);
+            if best_move < current_move {
+                best_move = current_move;
+                current_move_board = move_.clone();
+            }
+        }
+        return current_move_board;
     }
 }

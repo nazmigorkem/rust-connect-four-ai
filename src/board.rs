@@ -48,7 +48,7 @@ impl Board {
         outcome
     }
 
-    pub fn is_game_finished(&self, i: u8, j: u8, turn: bool) -> bool {
+    pub fn is_game_finished_with_positional_check(&self, i: u8, j: u8, turn: bool) -> bool {
         let directions = [(-1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)];
         for direction in directions {
             let mut current_check = direction.clone();
@@ -60,12 +60,35 @@ impl Board {
                 current_check.0 += direction.0;
                 current_check.1 += direction.1;
                 count += 1;
-                if count % 4 == 0 {
+                if count == 4 {
                     return true;
                 }
             }
         }
         false
+    }
+
+    pub fn is_game_finished_whole_board_check(&self) -> (bool, bool) {
+        let directions = [(-1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)];
+        for direction in directions {
+            let mut current_check = direction.clone();
+            let mut count = 1;
+            for (i, j, player) in self.pegs.iter() {
+                while let Some(_) = self.pegs.get(&(
+                    i + current_check.0 as u8,
+                    j + current_check.1 as u8,
+                    *player,
+                )) {
+                    current_check.0 += direction.0;
+                    current_check.1 += direction.1;
+                    count += 1;
+                    if count == 4 {
+                        return (true, *player);
+                    }
+                }
+            }
+        }
+        (false, false)
     }
 
     pub fn get_peg_count_in_column(&self, choice: u8) -> usize {

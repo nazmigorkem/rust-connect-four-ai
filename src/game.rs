@@ -13,6 +13,11 @@ impl Game {
         let mut board = Board::new();
         let mut turn = true;
         let option = Game::select_play_type();
+        let side = if option == PlayType::HumanVsAI {
+            Game::select_side()
+        } else {
+            true
+        };
 
         println!("PLAYER 1 = x");
         println!("PLAYER 2 = o");
@@ -20,9 +25,10 @@ impl Game {
         board.print_board(&(GameState::NoError, String::from("Game started.")));
         loop {
             let mut resulting_flag = (GameState::NoError, String::from(""));
-            if option == PlayType::HumanVsHuman || (option == PlayType::HumanVsAI && turn) {
+            if option == PlayType::HumanVsHuman || (option == PlayType::HumanVsAI && turn == side) {
                 resulting_flag = Game::play_player(&mut board, turn);
-            } else if option == PlayType::AIVsAI || (option == PlayType::HumanVsAI && !turn) {
+            } else if option == PlayType::AIVsAI || (option == PlayType::HumanVsAI && turn != side)
+            {
                 resulting_flag = Game::play_ai(&mut board, turn);
             }
 
@@ -61,6 +67,26 @@ impl Game {
                     "1" => Some(PlayType::HumanVsHuman),
                     "2" => Some(PlayType::HumanVsAI),
                     "3" => Some(PlayType::AIVsAI),
+                    _ => None,
+                };
+                if option.is_some() {
+                    return option.unwrap();
+                }
+            }
+        }
+    }
+
+    pub fn select_side() -> bool {
+        let mut option: Option<bool>;
+        println!("Select side:");
+        println!("1) X");
+        println!("2) O");
+        loop {
+            let mut buffer = String::new();
+            if let Ok(_) = io::stdin().read_line(&mut buffer) {
+                option = match buffer.trim() {
+                    "1" => Some(true),
+                    "2" => Some(false),
                     _ => None,
                 };
                 if option.is_some() {

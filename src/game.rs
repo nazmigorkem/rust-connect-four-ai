@@ -1,6 +1,10 @@
 use std::io;
 
-use crate::{board::Board, enums::PlayType, minimax::minimax};
+use crate::{
+    board::Board,
+    enums::{GameState, PlayType},
+    minimax::minimax,
+};
 
 pub struct Game;
 
@@ -13,31 +17,32 @@ impl Game {
         println!("PLAYER 1 = x");
         println!("PLAYER 2 = o");
 
-        board.print_board(&(0, String::from("Game started.")));
+        board.print_board(&(GameState::NoError, String::from("Game started.")));
         loop {
-            let mut resulting_flag = (0, String::from(""));
+            let mut resulting_flag = (GameState::NoError, String::from(""));
             if option == PlayType::HumanVsHuman || (option == PlayType::HumanVsAI && turn) {
                 resulting_flag = Game::play_player(&mut board, turn);
             } else if option == PlayType::AIVsAI || (option == PlayType::HumanVsAI && !turn) {
                 resulting_flag = Game::play_ai(&mut board, turn);
             }
 
-            if resulting_flag.0 == 0 {
+            if resulting_flag.0 == GameState::NoError {
                 if board.pegs.len() == 56 {
-                    resulting_flag = (4, String::from("There is no available move. It is tie."))
+                    resulting_flag = (
+                        GameState::Finished,
+                        String::from("There is no available move. It is tie."),
+                    )
                 }
             }
             board.print_board(&resulting_flag);
-            if resulting_flag.0 == 4 {
-                break;
-            }
-            if board.is_game_finished() {
+            if resulting_flag.0 == GameState::Finished {
                 println!(
-                    "\x1b[12B\x1b[2KPlayer {} won the game.",
+                    "\x1b[11B\x1b[2KPlayer {} won the game.",
                     if turn { "1" } else { "2" }
                 );
                 break;
-            } else if resulting_flag.0 == 0 {
+            }
+            if resulting_flag.0 == GameState::NoError {
                 turn = !turn;
             }
         }
@@ -65,35 +70,44 @@ impl Game {
         }
     }
 
-    pub fn play_player(board: &mut Board, turn: bool) -> (u8, String) {
+    pub fn play_player(board: &mut Board, turn: bool) -> (GameState, String) {
         let mut buffer = String::new();
-        let mut resulting_flag: (u8, String) = (0, String::new());
+        let mut resulting_flag: (GameState, String) = (GameState::NoError, String::new());
         let mut choice = 0;
         if let Ok(_) = io::stdin().read_line(&mut buffer) {
             if let Ok(parsed) = buffer.trim().parse::<u8>() {
                 choice = parsed - 1;
                 if choice > 7 {
-                    resulting_flag = (1, String::from("Please give an integer between 1 and 8."));
+                    resulting_flag = (
+                        GameState::IntegerError,
+                        String::from("Please give an integer between 1 and 8."),
+                    );
                 }
             } else {
-                resulting_flag = (1, String::from("Please give an integer between 1 and 8."));
+                resulting_flag = (
+                    GameState::IntegerError,
+                    String::from("Please give an integer between 1 and 8."),
+                );
             }
             print!("\x1b[1A\x1b[0J");
         } else {
-            resulting_flag = (2, String::from("An error occured while taking input."));
+            resulting_flag = (
+                GameState::InputError,
+                String::from("An error occured while taking input."),
+            );
         }
         let i = board.get_peg_count_in_column(choice) as u8;
-        if resulting_flag.0 == 0 {
+        if resulting_flag.0 == GameState::NoError {
             resulting_flag = board.play(turn, i, choice);
         }
         if board.is_game_finished() {
-            resulting_flag = (4, String::from("Game finished."));
+            resulting_flag = (GameState::Finished, String::from("Game finished."));
         }
         return resulting_flag;
     }
 
-    pub fn play_ai(board: &mut Board, turn: bool) -> (u8, String) {
-        let mut resulting_flag: (u8, String);
+    pub fn play_ai(board: &mut Board, turn: bool) -> (GameState, String) {
+        let mut resulting_flag: (GameState, String);
 
         let mut moves = board.generate_possible_moves(turn);
 
@@ -109,7 +123,7 @@ impl Game {
         }
         resulting_flag = board.play(turn, current_move_board.1, current_move_board.2);
         if board.is_game_finished() {
-            resulting_flag = (4, String::from("Game finished."));
+            resulting_flag = (GameState::Finished, String::from("Game finished."));
         }
         return resulting_flag;
     }

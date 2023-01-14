@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use crate::enums::GameState;
+
 #[derive(Clone)]
 pub struct Board {
     pub pegs: HashSet<(u8, u8, bool)>,
@@ -14,10 +16,15 @@ impl Board {
         }
     }
 
-    pub fn play(&mut self, turn: bool, selected_row: u8, selected_column: u8) -> (u8, String) {
+    pub fn play(
+        &mut self,
+        turn: bool,
+        selected_row: u8,
+        selected_column: u8,
+    ) -> (GameState, String) {
         if selected_row == 7 {
             return (
-                3,
+                GameState::ColumnIsFull,
                 format!(
                     "You cannot put any more peg to column {}.",
                     selected_column + 1
@@ -27,7 +34,7 @@ impl Board {
         self.pegs.insert((selected_row, selected_column, turn));
         self.last_move = Some((selected_row, selected_column, turn));
         return (
-            0,
+            GameState::NoError,
             format!(
                 "Player {} put peg in column {}.",
                 if turn { 1 } else { 2 },
@@ -42,7 +49,7 @@ impl Board {
             let mut board = self.clone();
             let row = self.get_peg_count_in_column(j) as u8;
             let result = board.play(turn, row, j);
-            if result.0 == 0 {
+            if result.0 == GameState::NoError {
                 outcome.push((board, row, j));
             }
         }
@@ -81,7 +88,7 @@ impl Board {
             .len()
     }
 
-    pub fn print_board(&self, result: &(u8, String)) {
+    pub fn print_board(&self, result: &(GameState, String)) {
         let width = 20;
         println!(
             "{:=<width$}\n\x1b[2KLast move result: {}\n{:=<width$}",

@@ -1,5 +1,3 @@
-use board::Board;
-
 use crate::game::Game;
 
 pub mod board;

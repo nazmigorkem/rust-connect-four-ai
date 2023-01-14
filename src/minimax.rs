@@ -1,6 +1,6 @@
 use crate::board::Board;
 pub fn minimax(board: &mut Board, is_maximizing: bool, depth: u32) -> i32 {
-    if depth == 0 || board.is_game_finished_whole_board_check().0 {
+    if depth == 0 || board.is_game_finished() {
         return utility(board);
     }
     if is_maximizing {

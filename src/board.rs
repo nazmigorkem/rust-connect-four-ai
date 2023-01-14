@@ -3,14 +3,14 @@ use std::collections::HashSet;
 #[derive(Clone)]
 pub struct Board {
     pub pegs: HashSet<(u8, u8, bool)>,
-    pub value: i32,
+    pub last_move: Option<(u8, u8, bool)>,
 }
 
 impl Board {
     pub fn new() -> Self {
         Board {
             pegs: HashSet::new(),
-            value: 0,
+            last_move: None,
         }
     }
 
@@ -25,6 +25,7 @@ impl Board {
             );
         }
         self.pegs.insert((selected_row, selected_column, turn));
+        self.last_move = Some((selected_row, selected_column, turn));
         return (
             0,
             format!(
@@ -48,7 +49,11 @@ impl Board {
         outcome
     }
 
-    pub fn is_game_finished_with_positional_check(&self, i: u8, j: u8, turn: bool) -> bool {
+    pub fn is_game_finished(&self) -> bool {
+        if self.last_move.is_none() {
+            return false;
+        }
+        let (i, j, turn) = self.last_move.unwrap();
         let directions = [(-1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)];
         for direction in directions {
             let mut current_check = direction.clone();
@@ -66,29 +71,6 @@ impl Board {
             }
         }
         false
-    }
-
-    pub fn is_game_finished_whole_board_check(&self) -> (bool, bool) {
-        let directions = [(-1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)];
-        for direction in directions {
-            let mut current_check = direction.clone();
-            let mut count = 1;
-            for (i, j, player) in self.pegs.iter() {
-                while let Some(_) = self.pegs.get(&(
-                    i + current_check.0 as u8,
-                    j + current_check.1 as u8,
-                    *player,
-                )) {
-                    current_check.0 += direction.0;
-                    current_check.1 += direction.1;
-                    count += 1;
-                    if count == 4 {
-                        return (true, *player);
-                    }
-                }
-            }
-        }
-        (false, false)
     }
 
     pub fn get_peg_count_in_column(&self, choice: u8) -> usize {
@@ -116,26 +98,6 @@ impl Board {
             }
             print!("\n");
         }
-        print!("\x1b[11F");
+        print!("\x1b[10F");
     }
 }
-
-impl Ord for Board {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.value.cmp(&other.value)
-    }
-}
-
-impl PartialOrd for Board {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(other.cmp(self))
-    }
-}
-
-impl PartialEq for Board {
-    fn eq(&self, other: &Self) -> bool {
-        self.value == other.value
-    }
-}
-
-impl Eq for Board {}

@@ -32,16 +32,14 @@ impl Game {
             } else if option == PlayType::AIVsAI
                 || (option == PlayType::HumanVsAI && turn != human_side)
             {
-                resulting_flag = Game::play_ai(&mut board, turn, !human_side);
+                resulting_flag = Game::play_ai(&mut board, turn, turn);
             }
 
-            if resulting_flag.0 == GameState::NoError {
-                if board.pegs.len() == 56 {
-                    resulting_flag = (
-                        GameState::Finished,
-                        String::from("There is no available move. It is tie."),
-                    )
-                }
+            if resulting_flag.0 == GameState::NoError && board.pegs.len() == 56 {
+                resulting_flag = (
+                    GameState::Finished,
+                    String::from("There is no available move. It is tie."),
+                )
             }
             board.print_board(&resulting_flag);
             if resulting_flag.0 == GameState::Finished {
@@ -66,8 +64,8 @@ impl Game {
 
         let mut best_move = None;
         for move_ in moves {
-            let current_move = minimax(&move_.0, true, 6, f32::MIN, f32::MAX, ai_side);
-            println!("{current_move}");
+            let current_move = minimax(&move_.0, false, 6, f32::MIN, f32::MAX, ai_side);
+            print!("{current_move} ");
             if best_move.is_none() {
                 best_move = Some(current_move);
             } else if best_move.unwrap() < current_move {

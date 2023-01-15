@@ -1,6 +1,4 @@
-use std::{thread, time::Duration};
-
-use crate::{board::Board, enums::GameState};
+use crate::board::Board;
 pub fn minimax(
     board: &Board,
     is_maximizing: bool,

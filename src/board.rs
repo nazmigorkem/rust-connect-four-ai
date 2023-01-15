@@ -64,13 +64,13 @@ impl Board {
         let directions = [
             [(-1, 0), (1, 0)],
             [(0, -1), (0, 1)],
-            [(-1, -1), (-1, 1)],
-            [(1, 1), (1, -1)],
+            [(1, -1), (-1, 1)],
+            [(-1, -1), (1, 1)],
         ];
         for direction in directions {
             let mut count = 1;
             for position in direction {
-                let mut current_check = position;
+                let mut current_check = position.clone();
                 while let Some(_) =
                     self.pegs
                         .get(&(i + current_check.0 as u8, j + current_check.1 as u8, turn))
@@ -101,14 +101,18 @@ impl Board {
             "{:=<width$}\n\x1b[2KLast move result: {}\n{:=<width$}",
             "=", result.1, "=",
         );
-        let mut display_board: Vec<Vec<&str>> = vec![vec!["- "; 8]; 7];
+        let mut display_board: Vec<Vec<&str>> = vec![vec!["   \x1b[38;5;8m|\x1b[0m"; 8]; 7];
         for (i, j, player) in self.pegs.iter() {
-            display_board[*i as usize][*j as usize] = if *player { "x " } else { "o " }
+            display_board[*i as usize][*j as usize] = if *player {
+                " \x1b[1;31mx\x1b[0m |"
+            } else {
+                " \x1b[1;36mo\x1b[0m |"
+            }
         }
         display_board.reverse();
         for i in display_board {
             for j in i {
-                print!("{j} ");
+                print!("{j}");
             }
             print!("\n");
         }

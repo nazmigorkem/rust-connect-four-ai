@@ -65,7 +65,6 @@ impl Game {
         let mut best_move = None;
         for move_ in moves {
             let current_move = minimax(&move_.0, false, 6, f32::MIN, f32::MAX, ai_side);
-            print!("{current_move} ");
             if best_move.is_none() {
                 best_move = Some(current_move);
             } else if best_move.unwrap() < current_move {
